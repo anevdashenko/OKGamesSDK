@@ -1,4 +1,5 @@
 local Async = require("OKGames.utils.async")
+local JSON = require("OKGames.utils.json")
 
 ---@class OKGames
 local OKGames = {}
@@ -60,9 +61,36 @@ function OKGames:get_current_player_info(callback)
     end)
 end
 
+---@return table@recieve current player info {name, photo_url}
 function OKGames:get_current_player_info_async()
     return Async.async(function(done)
         self:get_current_player_info(done)
+    end)
+end
+
+---@return nil @show payment dialog,
+---@param options table @with options = {
+---name = purchase_name[required],
+---description = purchase_description[required],
+---code = purchaes_code[required],
+---price = purchase_price[required],
+---attributes = attributes[optional], json encoded table sended to server
+---uiConf = uiConf[optional]
+---@param complete_callback function@ callback
+function OKGames:show_payments(options, complete_callback)
+    assert(options, "options cant be nil")
+
+    local optionsJson = JSON.encode(options)
+    okgames_private.show_payment(optionsJson, function(script, message_id, message)
+        if complete_callback then
+            complete_callback(message)
+        end
+    end)
+end
+
+function OKGames:show_payments_async(options)
+    return Async.async(function(done)
+        self:show_payments(options, done)
     end)
 end
 

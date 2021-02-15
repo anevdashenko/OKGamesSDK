@@ -8,10 +8,15 @@ typedef void (*MessageString)(const char* message);
 
 
 extern "C" {
-    void OKGames_registerCallbacks(MessageString callbackInit, MessageString callbackGetPlayer);
+    void OKGames_registerCallbacks(
+        MessageString callbackInit, 
+        MessageString callbackGetPlayer, 
+        MessageString callbackPurchase);
+    
     
     void OKGames_init();
     void OKGames_getCurrentPlayer();
+    void OKGames_showPurchase(const char* optionsStr);
 }
 
 

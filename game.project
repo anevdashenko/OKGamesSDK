@@ -5,12 +5,19 @@ main_collection = /example/example.collectionc
 shared_state = 1
 
 [display]
-width = 960
-height = 640
+width = 640
+height = 1136
 
 [project]
 title = OKGamesSDK
 
 [library]
 include_dirs = OKGames
+
+[html5]
+scale_mode = fit
+htmlfile = /build_resource/web/engine_template.html
+
+[graphics]
+verify_graphics_calls = 0
 

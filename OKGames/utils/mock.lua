@@ -11,6 +11,10 @@ Mock.result_current_player = {
     photo = ""
 }
 
+Mock.result_payment = {
+    status = false
+}
+
 local function delay_call(func, ...)
     if not func then
         return
@@ -31,6 +35,12 @@ end
 function Mock.get_current_player(callback)
     print("OkGames mock get current player")
     delay_call(callback, Mock.result_current_player)
+end
+
+function Mock.show_payment( options, callback)
+    print("OkGames mock show payment for ", options)
+
+    delay_call(callback, Mock.result_payment)
 end
 
 return Mock

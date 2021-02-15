@@ -13,6 +13,7 @@
 
 LuaCallbackContainer callbacksInit;
 LuaCallbackContainer callbacksGetCurrentPlayer;
+LuaCallbackContainer callbackShowPurchase;
 
 static int init(lua_State* L)
 {
@@ -40,10 +41,25 @@ static void onGetCurrentPlayer(const char* message)
     callbacksGetCurrentPlayer.SendMessageJsonObject("", message);
 }
 
+static int showPurchase(lua_State* L)
+{
+    const char* options = luaL_checkstring(L, 1);
+    callbackShowPurchase.AddListener(L, 2, true);
+    OKGames_showPurchase(options);
+    return 0;
+}
+
+static void onShowPurchaseComplete(const char* message)
+{
+    dmLogInfo("onShowPurchaseComplete ok sdk, %s", message);
+    callbackShowPurchase.SendMessageJsonObject("", message);
+}
+
 static const luaL_reg Module_methods[] =
 {
     {"init", init},
     {"get_current_player", getCurrentPlayer},
+    {"show_payment", showPurchase},
 
     {0, 0}
 };
@@ -65,7 +81,7 @@ dmExtension::Result AppInitializeOKGamesExtension(dmExtension::AppParams* params
 dmExtension::Result InitializeOKGamesExtension(dmExtension::Params* params) {
 	#if defined(DM_PLATFORM_HTML5)
 		LuaInit(params->m_L);
-        OKGames_registerCallbacks(onInit, onGetCurrentPlayer);
+        OKGames_registerCallbacks(onInit, onGetCurrentPlayer, onShowPurchaseComplete);
 	#else
 		printf("Extension %s is not supported\n", MODULE_NAME);
 	#endif

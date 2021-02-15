@@ -1,6 +1,7 @@
 #pragma once
 
 #include <dmsdk/sdk.h>
+#include "luautils.h"
 
 struct LuaListener {
     LuaListener() : m_L(0), m_Callback(LUA_NOREF), m_Self(LUA_NOREF), m_removeOnCall(false)
@@ -48,16 +49,19 @@ LuaCallbackContainer::~LuaCallbackContainer()
 
 void LuaCallbackContainer::AddListener(lua_State* L, int index, bool removeOnCall)
 {
+    dmLogInfo("Add Listener");
+
     LuaListener listener;
     listener.m_L = dmScript::GetMainThread(L);
 
     luaL_checktype(L, index, LUA_TFUNCTION);
-    lua_pushvalue(L, 1);
+    lua_pushvalue(L, index);
     listener.m_Callback = dmScript::Ref(L, LUA_REGISTRYINDEX);
 
     listener.m_removeOnCall = removeOnCall;
 
     dmScript::GetInstance(L);
+
     listener.m_Self = dmScript::Ref(L, LUA_REGISTRYINDEX);
 
     if(listener.m_Callback != LUA_NOREF)
@@ -303,6 +307,7 @@ void LuaCallbackContainer::SendMessageJsonObject(const char* message_id, const c
             //[-2] - message_id
             //[-3] - self
             //[-4] - callback
+
             int ret = lua_pcall(L, 3, 0, 0);
             if(ret != 0) {
                 dmLogError("Error running callback: %s", lua_tostring(L, -1));
