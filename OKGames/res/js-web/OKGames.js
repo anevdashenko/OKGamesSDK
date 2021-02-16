@@ -5,18 +5,38 @@
     var CALLBACK_LOADAD = "loadAd";
     var CALLBACK_SHOW_LOADED = "showLoadedAd";
     var CALLBACK_SHOW_INTERSTITIAL = "showAd";
+    var CALLBACK_SHOW_INVITE = "showInvite";
 
     var STATUS = {
         OK : "ok",
         ERROR : "error"
     }
 
+    var INTERSTITIAL_AD_STATUS = {
+        NOT_LOADED : 0,
+        LOADING : 1,
+        READY : 2,
+        SHOW : 3,
+        SHOWN : 4
+    };
+
+    var INTERSTITIAL_RESULT = {
+        AD_READY : "ready",
+        NO_ADS : "no_ads",
+        AD_PREPARED : "ad_prepared",
+        AD_SHOWN : "ad_shown"
+    };
+
     var OKGames = {
         _requestParameters : null,
+
         _purchaseCompleteCallback : null,
         _loadAdCallback : null,
         _rewardedAdCallback : null,
         _interstitialAdCallback : null,
+        _inviteCallback : null,
+
+        _interstitialAdStatus : INTERSTITIAL_AD_STATUS.NOT_LOADED,
 
         _apiCallbacks : {},
 
@@ -29,6 +49,7 @@
             OKGames._apiCallbacks[CALLBACK_LOADAD] = OKGames.onLoadRewardedAd;
             OKGames._apiCallbacks[CALLBACK_SHOW_LOADED] = OKGames.onRewardedCallback;
             OKGames._apiCallbacks[CALLBACK_SHOW_INTERSTITIAL] = OKGames.onShowInterstitialAd;
+            OKGames._apiCallbacks[CALLBACK_SHOW_INVITE] = OKGames.onShowInvite;
         },
 
         apiCallback : function(method, result, data){
@@ -126,9 +147,9 @@
                     var result = {
                         status : false
                     };
+                    OKGames._purchaseCompleteCallback = null;
 
                     complete_callback(result);
-                    OKGames._purchaseCompleteCallback = null;
  
                 }
             }
@@ -146,9 +167,8 @@
 
             if (OKGames._purchaseCompleteCallback != null){
                 OKGames._purchaseCompleteCallback(purchaseData);
+                OKGames._purchaseCompleteCallback = null;
             }
-
-            OKGames._purchaseCompleteCallback = null;
         },
 
         loadRewardedAd : function(complete_callback){
@@ -159,11 +179,11 @@
             }
             catch(e){
                 console.log("loadRewardedAd", e);
+                OKGames._loadAdCallback = null;
 
                 if (complete_callback){
                     complete_callback({status : false});
                 }
-                OKGames._loadAdCallback = null;
             }
         },
 
@@ -176,10 +196,9 @@
             }
 
             if (OKGames._loadAdCallback){
-                OKGames._loadAdCallback(resultData)
+                OKGames._loadAdCallback(resultData);
+                OKGames._loadAdCallback = null;
             }
-            
-            OKGames._loadAdCallback = null;
         },
 
         showRewardedAd : function(completeCallback){
@@ -190,12 +209,12 @@
             }
             catch(e){
                 console.log("showRewardedAd", e);
+                OKGames._rewardedAdCallback = null;
 
                 if (completeCallback){
                     completeCallback({status:false});
                 }
 
-                OKGames._rewardedAdCallback = completeCallback;
             }
         },
 
@@ -208,31 +227,50 @@
 
             if (OKGames._rewardedAdCallback){
                 OKGames._rewardedAdCallback(rewardedData);
+                OKGames._rewardedAdCallback = null;
             }
 
-            OKGames._rewardedAdCallback = null;
         },
 
         showInterstitialAd : function(completeCallback){
             OKGames._interstitialAdCallback = completeCallback;
+
             try{
+                OKGames._interstitialAdStatus = INTERSTITIAL_AD_STATUS.LOADING;
                 FAPI.UI.showAd();
             }
             catch(e){
                 console.log("showInterstitialAd", e);
+                OKGames._interstitialAdStatus = INTERSTITIAL_AD_STATUS.NOT_LOADED;
+                OKGames._interstitialAdCallback = null;
 
                 if (complete_callback){
                     complete_callback({status : false});
                 }
-
-                OKGames._interstitialAdCallback = null;
             }
 
         },
 
         onShowInterstitialAd : function(result, data){
+            var isSuccess = result == STATUS.OK;
+            var isShown = data == INTERSTITIAL_RESULT.AD_SHOWN;
+
+            if (data == INTERSTITIAL_RESULT.AD_PREPARED || data == INTERSTITIAL_RESULT.AD_READY){
+                OKGames._interstitialAdStatus = INTERSTITIAL_AD_STATUS.READY;
+            }
+
+            if (isShown){
+                OKGames._interstitialAdStatus = INTERSTITIAL_AD_STATUS.NOT_LOADED;
+            }
+
+            if (!isSuccess || isShown){
+                OKGames.onCompleteInterstitialCall(isSuccess, result, data);
+            }
+        },
+
+        onCompleteInterstitialCall : function(status, result, data){
             var adResult = {
-                status : true,
+                status : status,
                 result : result,
                 data : data
             }
@@ -242,8 +280,39 @@
             }
 
             OKGames._interstitialAdCallback = null;
-        }
 
+        },
+
+        //https://apiok.ru/dev/sdk/js/ui.showInvite/
+
+        showInvite : function(showParams, callback){
+            OKGames._inviteCallback = callback;
+            
+            try{
+                FAPI.UI.showInvite(showParams.text, showParams.params || null, showParams.selected_uids || null);
+            }
+            catch(e){
+                OKGames._inviteCallback = null;
+
+                if (callback){
+                    callback({status:false});
+                }
+            }
+        },
+
+        onShowInvite : function(result, data){
+            var isSucces = result == STATUS.OK;
+            var inviteResult = {
+                status : isSucces,
+                data : data
+            };
+
+            if (OKGames._inviteCallback){
+                OKGames._inviteCallback(inviteResult);
+            }
+
+            OKGames._inviteCallback = null;
+        }
     }
 
 

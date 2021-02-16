@@ -2,28 +2,27 @@ var OKGames = {
 
     $OKGames : {
         _playerInfoStr : null,
-        _callbackInit : null,
-        _callbackGetPlayer : null,
-        _callbackPurchase : null,
-        _callbackLoadedRewardedAd : null,
-        _callbackShowRewardedAd : null,
-        _callbackInterstitialAd : null,
+        _callbackJsonMessage : null,
 
-        sendObjectCallback : function(callback, value){
+        sendObjectCallback : function(callback, callbackID, value){
             value = value || {};
             var objectStr = JSON.stringify(value);
 
-            OKGames.sendStringCallback(callback, objectStr)
+            OKGames.sendStringCallback(callback, callbackID, objectStr)
         },
 
-        sendStringCallback : function(callback, value){
+        sendStringCallback : function(callback, callbackID, value){
             value = value || "{}";
 
             var valueStr = 0;
 
             valueStr = allocate(intArrayFromString(value), "i8", ALLOC_NORMAL);
-            {{{ makeDynCall("viii", "callback") }}}(valueStr);
+            {{{ makeDynCall("viii", "callback") }}}(callbackID, valueStr);
             Module._free(valueStr);
+        },
+
+        sendObjectCallbackID : function(callbackID, value){
+            OKGames.sendObjectCallback(OKGames._callbackJsonMessage, callbackID, value);
         },
 
         parse_json : function(str){
@@ -43,22 +42,12 @@ var OKGames = {
     },
 
     OKGames_registerCallbacks : function(
-        callbackInit, 
-        callbackGetPlayer, 
-        callbackPurchase, 
-        callbackLoadedRewardedAd, 
-        callbackShowRewardedAd,
-        callbackInterstitialAd) {
+        callbackJsonMessage) {
 
-        OKGames._callbackInit = callbackInit;
-        OKGames._callbackGetPlayer = callbackGetPlayer;
-        OKGames._callbackPurchase = callbackPurchase;
-        OKGames._callbackLoadedRewardedAd = callbackLoadedRewardedAd;
-        OKGames._callbackShowRewardedAd = callbackShowRewardedAd ;
-        OKGames._callbackInterstitialAd = callbackInterstitialAd ;
+        OKGames._callbackJsonMessage = callbackJsonMessage;
     },
 
-    OKGames_init : function(){
+    OKGames_init : function(callbackID){
         console.log("OKGames_init");
         okgamesSDK.init((status)=>{
             console.log("complete init");
@@ -67,11 +56,11 @@ var OKGames = {
                 status : status
             };
 
-            OKGames.sendObjectCallback(OKGames._callbackInit, result);
+            OKGames.sendObjectCallbackID(callbackID, result);
         });
     },
 
-    OKGames_getCurrentPlayer : function(){
+    OKGames_getCurrentPlayer : function(callbackID){
         console.log("OKGames_getCurrentPlayer");
         okgamesSDK.getCurrentPlayerInfo((status, playerData)=>{
             console.log("complete recieve player")
@@ -81,33 +70,39 @@ var OKGames = {
                 player_data : playerData
             };
 
-            OKGames.sendObjectCallback(OKGames._callbackGetPlayer, result);
+            OKGames.sendObjectCallbackID(callbackID, result);
         });
     },
 
-    OKGames_showPurchase : function(optionsStr){
+    OKGames_showPurchase : function(callbackID, optionsStr){
         options = OKGames.parse_json(UTF8ToString(optionsStr) );
-        console.log("OKGames_showPurchase");
         okgamesSDK.showPayment(options, (result) => {
-            OKGames.sendObjectCallback(OKGames._callbackPurchase, result);
+            OKGames.sendObjectCallbackID(callbackID, result);
         });
     },
 
-    OKGames_loadRewardedAd : function(){
+    OKGames_loadRewardedAd : function(callbackID){
         okgamesSDK.loadRewardedAd((result) => {
-            OKGames.sendObjectCallback(OKGames._callbackLoadedRewardedAd, result);
+            OKGames.sendObjectCallbackID(callbackID, result);
         });
     },
 
-    OKGames_showRewardedAd : function(){
+    OKGames_showRewardedAd : function(callbackID){
         okgamesSDK.showRewardedAd((result) => {
-            OKGames.sendObjectCallback(OKGames._callbackShowRewardedAd, result);
+            OKGames.sendObjectCallbackID(callbackID, result);
         });
     },
 
-    OKGames_showInterstitialAd : function(){
+    OKGames_showInterstitialAd : function(callbackID){
         okgamesSDK.showInterstitialAd((result) => {
-            OKGames.sendObjectCallback(OKGames._callbackInterstitialAd, result);
+            OKGames.sendObjectCallbackID(callbackID, result);
+        });
+    },
+
+    OKGames_showInvite : function(callbackID, showOptionsStr){
+        var showParams = OKGames.parse_json(UTF8ToString(showOptionsStr) );
+        okgamesSDK.showInvite(showParams, (result) => {
+            OKGames.sendObjectCallbackID(callbackID, result);
         });
     }
 }

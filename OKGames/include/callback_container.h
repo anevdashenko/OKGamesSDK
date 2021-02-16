@@ -49,8 +49,6 @@ LuaCallbackContainer::~LuaCallbackContainer()
 
 void LuaCallbackContainer::AddListener(lua_State* L, int index, bool removeOnCall)
 {
-    dmLogInfo("Add Listener");
-
     LuaListener listener;
     listener.m_L = dmScript::GetMainThread(L);
 

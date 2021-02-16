@@ -11,55 +11,95 @@
 
 #if defined(DM_PLATFORM_HTML5)
 
-LuaCallbackContainer callbacksInit;
-LuaCallbackContainer callbacksGetCurrentPlayer;
-LuaCallbackContainer callbackShowPurchase;
+
+enum CallbackID {
+    CallbackInit = 0,
+    CallbackGetCurrentPlayer = 1,
+    CallbackPurchase = 2,
+    CallbackLoadRewardedAD = 3,
+    CallbackShowRewardedAD = 4,
+    CallbackShowInterstitialAD = 5,
+    CallbackShowInvite = 7,
+
+    CallbackCount
+};
+
+
+LuaCallbackContainer jsCallbacks[CallbackCount];
 
 static int init(lua_State* L)
 {
-    callbacksInit.AddListener(L, 1, true);
-    OKGames_init();
+    jsCallbacks[CallbackInit].AddListener(L, 1, true);
+    OKGames_init(CallbackInit);
     return 0;
-}
-
-static void onInit(const char* message)
-{
-    dmLogDebug("onInit ok sdk %s", message);
-    callbacksInit.SendMessageJsonObject("", message);
 }
 
 static int getCurrentPlayer(lua_State* L)
 {
-    callbacksGetCurrentPlayer.AddListener(L, 1, true);
-    OKGames_getCurrentPlayer();
+    jsCallbacks[CallbackGetCurrentPlayer].AddListener(L, 1, true);
+    OKGames_getCurrentPlayer(CallbackGetCurrentPlayer);
     return 0;
-}
-
-static void onGetCurrentPlayer(const char* message)
-{
-    dmLogDebug("onGetCurrentPlayer ok sdk, %s", message);
-    callbacksGetCurrentPlayer.SendMessageJsonObject("", message);
 }
 
 static int showPurchase(lua_State* L)
 {
     const char* options = luaL_checkstring(L, 1);
-    callbackShowPurchase.AddListener(L, 2, true);
-    OKGames_showPurchase(options);
+    jsCallbacks[CallbackPurchase].AddListener(L, 2, true);
+    OKGames_showPurchase(CallbackPurchase, options);
     return 0;
 }
 
-static void onShowPurchaseComplete(const char* message)
+static int loadRewardedAd(lua_State* L)
 {
-    dmLogInfo("onShowPurchaseComplete ok sdk, %s", message);
-    callbackShowPurchase.SendMessageJsonObject("", message);
+    jsCallbacks[CallbackLoadRewardedAD].AddListener(L, 1, true);
+    OKGames_loadRewardedAd(CallbackLoadRewardedAD);
+    return 0;
 }
+
+static int showRewardedAd(lua_State* L)
+{
+    jsCallbacks[CallbackShowRewardedAD].AddListener(L, 1, true);
+    OKGames_showRewardedAd(CallbackShowRewardedAD);
+    return 0;
+}
+
+static int showInterstitialAd(lua_State* L)
+{
+    jsCallbacks[CallbackShowInterstitialAD].AddListener(L, 1, true);
+    OKGames_showInterstitialAd(CallbackShowInterstitialAD);
+    return 0;
+}
+
+static int showInvite(lua_State* L)
+{
+    const char* showParams = luaL_checkstring(L, 1);
+
+    jsCallbacks[CallbackShowInvite].AddListener(L, 2, true);
+    OKGames_showInvite(CallbackShowInvite, showParams);
+    return 0;
+}
+
+static void onCallbackMessage(int callbackID, const char* message)
+{
+    if (callbackID < 0 || callbackID >= CallbackCount)
+    {
+        dmLogError("Callback id %d out of range", callbackID)
+        return;
+    }
+
+    jsCallbacks[callbackID].SendMessageJsonObject("", message);
+}
+
 
 static const luaL_reg Module_methods[] =
 {
     {"init", init},
     {"get_current_player", getCurrentPlayer},
     {"show_payment", showPurchase},
+    {"load_rewarded_ad", loadRewardedAd},
+    {"show_rewarded_ad", showRewardedAd},
+    {"show_interstitial_ad", showInterstitialAd},
+    {"show_invite", showInvite},
 
     {0, 0}
 };
@@ -81,7 +121,7 @@ dmExtension::Result AppInitializeOKGamesExtension(dmExtension::AppParams* params
 dmExtension::Result InitializeOKGamesExtension(dmExtension::Params* params) {
 	#if defined(DM_PLATFORM_HTML5)
 		LuaInit(params->m_L);
-        OKGames_registerCallbacks(onInit, onGetCurrentPlayer, onShowPurchaseComplete);
+        OKGames_registerCallbacks(onCallbackMessage);
 	#else
 		printf("Extension %s is not supported\n", MODULE_NAME);
 	#endif

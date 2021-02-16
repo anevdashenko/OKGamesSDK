@@ -94,4 +94,56 @@ function OKGames:show_payments_async(options)
     end)
 end
 
+function OKGames:load_rewarded_ad(callback)
+    okgames_private.load_rewarded_ad(function(script, message_id, message)
+        if callback then
+            callback(message)
+        end
+    end)
+end
+
+function OKGames:load_rewarded_ad_async()
+    return Async.async(function(done)
+        self:load_rewarded_ad(done)
+    end)
+end
+
+function OKGames:show_rewarded_ad(callback)
+    okgames_private.show_rewarded_ad(function(script, message_id, message)
+        if callback then
+            callback(message)
+        end
+    end)
+end
+
+function OKGames:show_rewarded_ad_async()
+    return Async.async(function(done)
+        self:show_rewarded_ad(done)
+    end)
+end
+
+function OKGames:show_interstitial_ad(callback)
+    okgames_private.show_interstitial_ad(function(script, message_id, message)
+        if callback then
+            callback(message)
+        end
+    end)
+end
+
+function OKGames:show_interstitial_ad_async()
+    return Async.async(function(done)
+        self:show_interstitial_ad(done)
+    end)
+end
+
+function OKGames:show_invite(show_params, callback)
+    assert(show_params)
+    local show_params_str = JSON.encode(show_params)
+    okgames_private.show_invite(show_params_str, function(script, message_id, message)
+        if callback then
+            callback(message)
+        end
+    end)
+end
+
 return OKGames

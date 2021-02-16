@@ -3,12 +3,63 @@ local OKGamesMock = require("OKGames.utils.mock")
 
 local ID_CONTROL_PANEL = hash("control_panel")
 local ID_BUTTON_SHOW_AD = hash("button_show_ad")
+local ID_BUTTON_SHOW_REWARDED_AD = hash("button_show_rewarded_ad")
 local ID_BUTTON_SHOW_PAYMENT = hash("button_show_payment")
+local ID_BUTTON_SHOW_INVITE = hash("button_show_invite")
 
 local ACTION_TOUCH = hash("touch")
 
+local AD_STATE = {
+	NOT_LOADED = 1,
+	LOADING = 2,
+	LOADED = 3,
+	SHOW = 4
+}
+
+local function show_invite(self)
+	local options = {
+		text = "Play with me!"
+	}
+	OKGames:show_invite(options, function(invite_result)
+		pprint("Invite result", invite_result)
+	end)
+end
+
+local function is_ad_process(ad_status)
+	return ad_status == AD_STATE.LOADING or ad_status == AD_STATE.SHOW
+end
+
 local function show_ad(self)
 	print("show ad")
+	OKGames:show_interstitial_ad(function(result_data)
+		pprint("Show ad result", result_data)
+	end)
+end
+
+local function show_rewarded_ad(self)
+	print("show rewarded ad", self.rewarded_ad_state)
+	if is_ad_process(self.rewarded_ad_state) then
+		return
+	end
+
+	if self.rewarded_ad_state == AD_STATE.NOT_LOADED then
+		self.rewarded_ad_state = AD_STATE.LOADING
+		OKGames:load_rewarded_ad(function(result)
+			if result.status then
+				self.rewarded_ad_state = AD_STATE.LOADED
+			else
+				self.rewarded_ad_state = AD_STATE.NOT_LOADED
+			end
+		end)
+	end
+
+	if self.rewarded_ad_state == AD_STATE.LOADED then
+		self.rewarded_ad_state = AD_STATE.SHOW
+		OKGames:show_rewarded_ad(function(result)
+			local success = result.status
+			self.rewarded_ad_state = AD_STATE.NOT_LOADED
+		end)
+	end
 end
 
 local function show_payment(self)
@@ -70,6 +121,8 @@ local function bind_buttons()
 	local buttons = {}
 	add_button(buttons, ID_BUTTON_SHOW_AD, show_ad)
 	add_button(buttons, ID_BUTTON_SHOW_PAYMENT, show_payment)
+	add_button(buttons, ID_BUTTON_SHOW_REWARDED_AD, show_rewarded_ad)
+	add_button(buttons, ID_BUTTON_SHOW_INVITE, show_invite)
 
 	return buttons
 end
@@ -78,7 +131,7 @@ local function init_view(self)
 	local view = {}
 
 	view.control_panel = gui.get_node(ID_CONTROL_PANEL)
-	gui.set_enabled(view.control_panel, false)
+	--gui.set_enabled(view.control_panel, false)
 
 	view.buttons = bind_buttons()
 	self.view = view
@@ -87,10 +140,12 @@ end
 
 function init(self)
     msg.post(".", "acquire_input_focus")
+
+	self.rewarded_ad_state = AD_STATE.NOT_LOADED
+	self.interstitial_ad_state = AD_STATE.NOT_LOADED
+
 	init_view(self)
 	init_sdk(self)
-
-
 end
 
 function on_input(self, action_id, action)
