@@ -34,7 +34,18 @@
         AD_SHOWN : "ad_shown"
     };
 
+    function createSafeCallback(callback){
+        return function(){
+            if (callback){
+                return callback.apply(null, arguments);
+            }
+
+            return null;
+        }
+    }
+
     var OKGames = {
+        _isInited : false,
         _requestParameters : null,
 
         _purchaseCompleteCallback : null,
@@ -48,18 +59,14 @@
 
         _apiCallbacks : {},
 
-        createSafeCallback : function(callback){
-            return function(){
-                if (callback){
-                    return callback.apply(null, arguments);
-                }
 
-                return null;
-            }
-        },
 
         isSDKAvailable : function(){
             return window.FAPI !== undefined;
+        },
+
+        isSDKInit : function(){
+            return OKGames._isInited;
         },
 
         initialize : function(){
@@ -70,7 +77,7 @@
             OKGames._apiCallbacks[CALLBACK_SHOW_INVITE] = OKGames.onShowInvite;
             OKGames._apiCallbacks[CALLBACK_GET_PAGE_INFO] = this.onGetPageInfo;
 
-            this._pageInfoCallback = this.createSafeCallback(null);
+            this._pageInfoCallback = createSafeCallback(null);
         },
 
         apiCallback : function(method, result, data){
@@ -97,6 +104,7 @@
                 FAPI.init(_requestParameters["api_server"], _requestParameters["apiconnection"],
                     function() {
                         console.log("OK games success init");
+                        OKGames._isInited = true;
                         callback(true);
                     },
 
@@ -345,8 +353,8 @@
         },
 
         getPageInfo : function(completeCallback){
-            this._pageInfoCallback(null);
-            this._pageInfoCallback = this.createSafeCallback(completeCallback);
+            OKGames._pageInfoCallback(null);
+            OKGames._pageInfoCallback = createSafeCallback(completeCallback);
 
             FAPI.UI.getPageInfo();
         },
@@ -359,8 +367,8 @@
                 data : data
             };
 
-            this._pageInfoCallback(resultData);
-            this._pageInfoCallback = this.createSafeCallback(null);
+            OKGames._pageInfoCallback(resultData);
+            OKGames._pageInfoCallback = createSafeCallback(null);
         }
     }
 
