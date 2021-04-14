@@ -20,6 +20,7 @@ enum CallbackID {
     CallbackShowRewardedAD = 4,
     CallbackShowInterstitialAD = 5,
     CallbackShowInvite = 7,
+    CallbackGetPage = 8,
 
     CallbackCount
 };
@@ -90,6 +91,19 @@ static void onCallbackMessage(int callbackID, const char* message)
     jsCallbacks[callbackID].SendMessageJsonObject("", message);
 }
 
+static int setWindowSize(lua_State* L)
+{
+    const char* optionsWindow = luaL_checkstring(L, 1);
+    OKGames_setWindowSize(optionsWindow);
+    return 0;
+}
+
+static int getPageInfo(lua_State* L)
+{
+    jsCallbacks[CallbackGetPage].AddListener(L, 1, true);
+    OKGames_getPageInfo(CallbackGetPage);
+    return 0;
+}
 
 static const luaL_reg Module_methods[] =
 {
@@ -100,6 +114,8 @@ static const luaL_reg Module_methods[] =
     {"show_rewarded_ad", showRewardedAd},
     {"show_interstitial_ad", showInterstitialAd},
     {"show_invite", showInvite},
+    {"set_window_size", setWindowSize},
+    {"get_page_info", getPageInfo},
 
     {0, 0}
 };

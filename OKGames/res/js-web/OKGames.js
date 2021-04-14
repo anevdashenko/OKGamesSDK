@@ -6,6 +6,13 @@
     var CALLBACK_SHOW_LOADED = "showLoadedAd";
     var CALLBACK_SHOW_INTERSTITIAL = "showAd";
     var CALLBACK_SHOW_INVITE = "showInvite";
+    var CALLBACK_GET_PAGE_INFO = "getPageInfo";
+
+    var MAX_WINDOW_WIDTH = 760;
+    var MIN_WINDOW_WIDTH = 100;
+
+    var MAX_WINDOW_HEIGHT = 4000;
+    var MIN_WINDOW_HEIGHT = 100;
 
     var STATUS = {
         OK : "ok",
@@ -35,10 +42,21 @@
         _rewardedAdCallback : null,
         _interstitialAdCallback : null,
         _inviteCallback : null,
+        _pageInfoCallback : null,
 
         _interstitialAdStatus : INTERSTITIAL_AD_STATUS.NOT_LOADED,
 
         _apiCallbacks : {},
+
+        createSafeCallback : function(callback){
+            return function(){
+                if (callback){
+                    return callback.apply(null, arguments);
+                }
+
+                return null;
+            }
+        },
 
         isSDKAvailable : function(){
             return window.FAPI !== undefined;
@@ -50,6 +68,7 @@
             OKGames._apiCallbacks[CALLBACK_SHOW_LOADED] = OKGames.onRewardedCallback;
             OKGames._apiCallbacks[CALLBACK_SHOW_INTERSTITIAL] = OKGames.onShowInterstitialAd;
             OKGames._apiCallbacks[CALLBACK_SHOW_INVITE] = OKGames.onShowInvite;
+            OKGames._apiCallbacks[CALLBACK_GET_PAGE_INFO] = this.onGetPageInfo;
         },
 
         apiCallback : function(method, result, data){
@@ -312,9 +331,36 @@
             }
 
             OKGames._inviteCallback = null;
+        },
+
+        setWindowSize : function(width, height){
+            if ((width < MIN_WINDOW_WIDTH) || (width > MAX_WINDOW_WIDTH) || 
+                (height < MIN_WINDOW_HEIGHT) || (height > MAX_WINDOW_HEIGHT)) {
+                FAPI.UI.setWindowSize(width, height);
+            } else {
+                console.log("OKSDK: setWindowSize invalid size", width, height)
+            }
+        },
+
+        getPageInfo : function(completeCallback){
+            this._pageInfoCallback(null);
+            this._pageInfoCallback = this.createSafeCallback(completeCallback);
+
+            FAPI.UI.getPageInfo();
+        },
+
+        onGetPageInfo : function(result, data){
+            var isSucces = result == STATUS.OK;
+
+            var resultData = {
+                status : isSucces,
+                data : data
+            };
+
+            this._pageInfoCallback(resultData);
+            this._pageInfoCallback = this.createSafeCallback(null);
         }
     }
-
 
     OKGames.initialize();
 
