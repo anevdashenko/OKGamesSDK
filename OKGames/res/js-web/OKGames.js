@@ -69,6 +69,8 @@
             OKGames._apiCallbacks[CALLBACK_SHOW_INTERSTITIAL] = OKGames.onShowInterstitialAd;
             OKGames._apiCallbacks[CALLBACK_SHOW_INVITE] = OKGames.onShowInvite;
             OKGames._apiCallbacks[CALLBACK_GET_PAGE_INFO] = this.onGetPageInfo;
+
+            this._pageInfoCallback = this.createSafeCallback(null);
         },
 
         apiCallback : function(method, result, data){
