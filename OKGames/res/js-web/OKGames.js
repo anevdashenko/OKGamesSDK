@@ -97,6 +97,11 @@
                 return;
             }
 
+            if (OKGames.isSDKInit()){
+                callback(true);
+                return;
+            }
+
             try
             {
                 _requestParameters = FAPI.Util.getRequestParameters();
