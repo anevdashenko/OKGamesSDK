@@ -77,11 +77,24 @@ end
 ---attributes = attributes[optional], json encoded table sended to server
 ---uiConf = uiConf[optional]
 ---@param complete_callback function@ callback
+---callback recieve table result = {
+--- status = bool status of purchase
+--- result = string code of purchase result
+--- data = table with purchase result, example data = { amount = 100 }
+
 function OKGames:show_payments(options, complete_callback)
     assert(options, "options cant be nil")
 
     local optionsJson = JSON.encode(options)
     okgames_private.show_payment(optionsJson, function(script, message_id, message)
+        if message and message.data then
+            local status, purchase_data = pcall(JSON.decode, message.data)
+
+            if status then
+                message.data = purchase_data
+            end
+        end
+
         if complete_callback then
             complete_callback(message)
         end

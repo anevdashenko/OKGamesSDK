@@ -191,11 +191,11 @@
         },
 
         onCompletePurchase : function(result, data){
-            isSuccess = result === STATUS.OK;
+            var isSuccess = result === STATUS.OK;
 
             var purchaseData = {
-                status : result,
-                result_message : result,
+                status : isSuccess,
+                result : result,
                 data : data
             };
 
