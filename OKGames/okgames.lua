@@ -21,8 +21,7 @@ end
 ---@param callback function@ called when initialization complete with table result as param
 function OKGames:init(callback)
     okgames_private.init(function(script, message_id, message)
-        log("OKGames:init complete")
-        pprint(message)
+        log("OKGames:init complete", message)
         if message and message.status then
             self.is_init = true
         end
