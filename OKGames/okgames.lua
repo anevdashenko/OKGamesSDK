@@ -9,11 +9,9 @@ end
 
 local okgames_private = OK_games
 
-function OKGames:enable_log()
-    log = pprint
+function OKGames:enable_log(value)
+    log =value and pprint or function()end
 end
-
-OKGames:enable_log()
 
 function OKGames:setup_mock(mock)
     okgames_private = okgames_private or mock
@@ -53,7 +51,7 @@ function OKGames:get_current_player_info(callback)
     log("OKGames:get_current_player_info")
 
     okgames_private.get_current_player(function(script, message_id, message)
-        pprint("get player", message)
+        log("get player", message)
 
         if callback then
             callback(message)
