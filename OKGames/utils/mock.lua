@@ -5,7 +5,7 @@ Mock.DELAY_TIMEOUT = 0
 
 
 Mock.result_init = {
-    success = true
+    status = true
 }
 
 Mock.result_current_player = {
