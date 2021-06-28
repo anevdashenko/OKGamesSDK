@@ -104,6 +104,17 @@ var OKGames = {
         okgamesSDK.showInvite(showParams, (result) => {
             OKGames.sendObjectCallbackID(callbackID, result);
         });
+    },
+
+    OKGames_setWindowSize : function(windowSizeStr){
+        var windowSize = OKGames.parse_json(UTF8ToString(windowSizeStr) );
+        okgamesSDK.setWindowSize(windowSize.width, windowSize.height);
+    },
+
+    OKGames_getPageInfo : function(callbackID){
+        okgamesSDK.getPageInfo((result)=>{
+            OKGames.sendObjectCallbackID(callbackID, result);
+        })
     }
 }
 

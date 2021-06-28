@@ -9,11 +9,9 @@ end
 
 local okgames_private = OK_games
 
-function OKGames:enable_log()
-    log = pprint
+function OKGames:enable_log(value)
+    log =value and pprint or function()end
 end
-
-OKGames:enable_log()
 
 function OKGames:setup_mock(mock)
     okgames_private = okgames_private or mock
@@ -23,8 +21,7 @@ end
 ---@param callback function@ called when initialization complete with table result as param
 function OKGames:init(callback)
     okgames_private.init(function(script, message_id, message)
-        log("OKGames:init complete")
-        pprint(message)
+        log("OKGames:init complete", message)
         if message and message.status then
             self.is_init = true
         end
@@ -53,7 +50,7 @@ function OKGames:get_current_player_info(callback)
     log("OKGames:get_current_player_info")
 
     okgames_private.get_current_player(function(script, message_id, message)
-        pprint("get player", message)
+        log("get player", message)
 
         if callback then
             callback(message)
@@ -77,11 +74,24 @@ end
 ---attributes = attributes[optional], json encoded table sended to server
 ---uiConf = uiConf[optional]
 ---@param complete_callback function@ callback
+---callback recieve table result = {
+--- status = bool status of purchase
+--- result = string code of purchase result
+--- data = table with purchase result, example data = { amount = 100 }
+
 function OKGames:show_payments(options, complete_callback)
     assert(options, "options cant be nil")
 
     local optionsJson = JSON.encode(options)
     okgames_private.show_payment(optionsJson, function(script, message_id, message)
+        if message and message.data then
+            local status, purchase_data = pcall(JSON.decode, message.data)
+
+            if status then
+                message.data = purchase_data
+            end
+        end
+
         if complete_callback then
             complete_callback(message)
         end

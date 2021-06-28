@@ -17,6 +17,9 @@ extern "C" {
     void OKGames_showRewardedAd(int callbackID);
     void OKGames_showInterstitialAd(int callbackID);
     void OKGames_showInvite(int callbackID, const char* showParams);
+
+    void OKGames_setWindowSize(const char* windowSizeOptions);
+    void OKGames_getPageInfo(int callbackID);
 }
 
 

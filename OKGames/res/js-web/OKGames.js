@@ -6,6 +6,13 @@
     var CALLBACK_SHOW_LOADED = "showLoadedAd";
     var CALLBACK_SHOW_INTERSTITIAL = "showAd";
     var CALLBACK_SHOW_INVITE = "showInvite";
+    var CALLBACK_GET_PAGE_INFO = "getPageInfo";
+
+    var MAX_WINDOW_WIDTH = 760;
+    var MIN_WINDOW_WIDTH = 100;
+
+    var MAX_WINDOW_HEIGHT = 4000;
+    var MIN_WINDOW_HEIGHT = 100;
 
     var STATUS = {
         OK : "ok",
@@ -27,7 +34,18 @@
         AD_SHOWN : "ad_shown"
     };
 
+    function createSafeCallback(callback){
+        return function(){
+            if (callback){
+                return callback.apply(null, arguments);
+            }
+
+            return null;
+        }
+    }
+
     var OKGames = {
+        _isInited : false,
         _requestParameters : null,
 
         _purchaseCompleteCallback : null,
@@ -35,13 +53,20 @@
         _rewardedAdCallback : null,
         _interstitialAdCallback : null,
         _inviteCallback : null,
+        _pageInfoCallback : null,
 
         _interstitialAdStatus : INTERSTITIAL_AD_STATUS.NOT_LOADED,
 
         _apiCallbacks : {},
 
+
+
         isSDKAvailable : function(){
             return window.FAPI !== undefined;
+        },
+
+        isSDKInit : function(){
+            return OKGames._isInited;
         },
 
         initialize : function(){
@@ -50,6 +75,9 @@
             OKGames._apiCallbacks[CALLBACK_SHOW_LOADED] = OKGames.onRewardedCallback;
             OKGames._apiCallbacks[CALLBACK_SHOW_INTERSTITIAL] = OKGames.onShowInterstitialAd;
             OKGames._apiCallbacks[CALLBACK_SHOW_INVITE] = OKGames.onShowInvite;
+            OKGames._apiCallbacks[CALLBACK_GET_PAGE_INFO] = this.onGetPageInfo;
+
+            this._pageInfoCallback = createSafeCallback(null);
         },
 
         apiCallback : function(method, result, data){
@@ -69,6 +97,11 @@
                 return;
             }
 
+            if (OKGames.isSDKInit()){
+                callback(true);
+                return;
+            }
+
             try
             {
                 _requestParameters = FAPI.Util.getRequestParameters();
@@ -76,6 +109,7 @@
                 FAPI.init(_requestParameters["api_server"], _requestParameters["apiconnection"],
                     function() {
                         console.log("OK games success init");
+                        OKGames._isInited = true;
                         callback(true);
                     },
 
@@ -157,11 +191,11 @@
         },
 
         onCompletePurchase : function(result, data){
-            isSuccess = result === STATUS.OK;
+            var isSuccess = result === STATUS.OK;
 
             var purchaseData = {
-                status : result,
-                result_message : result,
+                status : isSuccess,
+                result : result,
                 data : data
             };
 
@@ -312,9 +346,36 @@
             }
 
             OKGames._inviteCallback = null;
+        },
+
+        setWindowSize : function(width, height){
+            if ((width < MIN_WINDOW_WIDTH) || (width > MAX_WINDOW_WIDTH) || 
+                (height < MIN_WINDOW_HEIGHT) || (height > MAX_WINDOW_HEIGHT)) {
+                FAPI.UI.setWindowSize(width, height);
+            } else {
+                console.log("OKSDK: setWindowSize invalid size", width, height)
+            }
+        },
+
+        getPageInfo : function(completeCallback){
+            OKGames._pageInfoCallback(null);
+            OKGames._pageInfoCallback = createSafeCallback(completeCallback);
+
+            FAPI.UI.getPageInfo();
+        },
+
+        onGetPageInfo : function(result, data){
+            var isSucces = result == STATUS.OK;
+
+            var resultData = {
+                status : isSucces,
+                data : data
+            };
+
+            OKGames._pageInfoCallback(resultData);
+            OKGames._pageInfoCallback = createSafeCallback(null);
         }
     }
-
 
     OKGames.initialize();
 
