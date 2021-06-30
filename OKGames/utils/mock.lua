@@ -1,3 +1,4 @@
+--- @type MockOKGameSDK
 local Mock = {}
 
 local DUMMY = {}

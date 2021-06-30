@@ -338,6 +338,7 @@
             var isSucces = result == STATUS.OK;
             var inviteResult = {
                 status : isSucces,
+                result : result,
                 data : data
             };
 
