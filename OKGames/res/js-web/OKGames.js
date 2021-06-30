@@ -93,12 +93,12 @@
             if (!OKGames.isSDKAvailable())
             {
                 console.log("OK sdk not available");
-                callback(false);
+                OKGames.onCompleteInit(callback, false);
                 return;
             }
 
             if (OKGames.isSDKInit()){
-                callback(true);
+                OKGames.onCompleteInit(callback, true);
                 return;
             }
 
@@ -110,20 +110,29 @@
                     function() {
                         console.log("OK games success init");
                         OKGames._isInited = true;
-                        callback(true);
+                        OKGames.onCompleteInit(callback, true);
                     },
 
                     function(error) {
                         console.log("OK games error init");
                         console.error(error);
-                        callback(false);
+                        OKGames.onCompleteInit(callback, false);
                     }
                 );
             }
             catch(e){
                 console.log("Cant initialize OK sdk", e);
-                callback(false);
+                OKGames.onCompleteInit(callback, false);
             }
+        },
+
+        onCompleteInit : function(complete_callback, status){
+            let result = {
+                status : status,
+                request_parameters :  _requestParameters || {}
+            }
+
+            complete_callback(result);
         },
 
         getCurrentPlayerInfo(callback)
@@ -350,8 +359,8 @@
         },
 
         setWindowSize : function(width, height){
-            if ((width < MIN_WINDOW_WIDTH) || (width > MAX_WINDOW_WIDTH) || 
-                (height < MIN_WINDOW_HEIGHT) || (height > MAX_WINDOW_HEIGHT)) {
+            if ((width >= MIN_WINDOW_WIDTH) && (width <= MAX_WINDOW_WIDTH) && 
+                (height >= MIN_WINDOW_HEIGHT) && (height <= MAX_WINDOW_HEIGHT)) {
                 FAPI.UI.setWindowSize(width, height);
             } else {
                 console.log("OKSDK: setWindowSize invalid size", width, height)

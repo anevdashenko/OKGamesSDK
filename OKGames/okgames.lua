@@ -22,6 +22,8 @@ function OKGames:init(callback)
         log("OKGames:init complete", message)
         if message and message.status then
             self.is_init = true
+
+            self._request_parameters = message.request_parameters
         end
 
         if callback then
@@ -29,6 +31,7 @@ function OKGames:init(callback)
         end
     end)
 end
+
 
 function OKGames:is_authorized()
     return self.is_init
@@ -38,6 +41,14 @@ function OKGames:init_async()
     return Async.async(function(done)
         self:init(done)
     end)
+end
+
+function OKGames:get_request_parameters()
+    if not self:is_authorized() then
+        error("Call init before accessing sdk api")
+    end
+
+    return self._request_parameters
 end
 
 function OKGames:get_current_player_info(callback)
@@ -162,6 +173,41 @@ end
 function OKGames:show_invite_async(show_params)
     return Async.async(function(done)
         self:show_invite(show_params, done)
+    end)
+end
+
+function OKGames:set_window_size(window_size)
+    if not self:is_authorized() then
+        error("Call init before accessing sdk api")
+    end
+
+    local window_param_str = JSON.encode(window_size)
+
+    okgames_private.set_window_size(window_param_str)
+end
+
+function OKGames:get_page_info(callback)
+    if not self:is_authorized() then
+        error("Call init before accessing sdk api")
+    end
+
+    okgames_private.get_page_info(function( script_instance, message_id, message)
+        if message and message.data then
+            local status, page_info = pcall(json.decode, message.data)
+            if status then
+                message.data = page_info
+            end
+        end
+
+        if callback then
+            callback(message, script_instance)
+        end
+    end)
+end
+
+function OKGames:get_page_info_async()
+    return Async.async(function(done)
+        self:get_page_info(done)
     end)
 end
 

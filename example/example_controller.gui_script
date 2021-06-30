@@ -1,3 +1,4 @@
+--- @type OKGamesSDK
 local OKGames = require("OKGames.okgames")
 local OKGamesMock = require("OKGames.utils.mock")
 
@@ -7,6 +8,11 @@ local ID_BUTTON_SHOW_REWARDED_AD = hash("button_show_rewarded_ad")
 local ID_BUTTON_SHOW_PAYMENT = hash("button_show_payment")
 local ID_BUTTON_SHOW_INVITE = hash("button_show_invite")
 
+local ID_BUTTON_SET_PAGE_SIZE = hash("button_set_page_size")
+local ID_BUTTON_GET_PAGE_SIZE = hash("button_get_page_info")
+
+local ID_TEXT_LOG = hash("text_log")
+
 local ACTION_TOUCH = hash("touch")
 
 local AD_STATE = {
@@ -15,6 +21,10 @@ local AD_STATE = {
 	LOADED = 3,
 	SHOW = 4
 }
+
+local function set_text_log(self, text)
+	gui.set_text(self.view.text_log, text or "")
+end
 
 local function show_invite(self)
 	local options = {
@@ -86,6 +96,25 @@ local function complete_init(self)
 	show_controls(self)
 end
 
+local function set_page_size(self)
+	local window_size = {
+		width = 600,
+		height = 1200
+	}
+
+	OKGames:set_window_size(window_size)
+end
+
+local function get_page_size(self)
+	OKGames:get_page_info(function(result_page)
+		pprint("page data", result_page)
+		if result_page.status and result_page.data then
+			local page_data = result_page.data
+			set_text_log(self, string.format( "widht =  %d height =%d ", page_data.innerWidth, page_data.innerHeight))
+		end
+	end)
+end
+
 local function init_sdk(self)
 	OKGames:setup_mock(OKGamesMock)
 
@@ -98,7 +127,8 @@ local function init_sdk(self)
 
 		local player_data = OKGames:get_current_player_info_async()
 		pprint("Current player data", player_data)
-
+		local request_parameters = OKGames:get_request_parameters()
+		pprint("Request parameters", request_parameters)
 		complete_init(self)
 	end)
     self.running_co = co
@@ -123,6 +153,8 @@ local function bind_buttons()
 	add_button(buttons, ID_BUTTON_SHOW_PAYMENT, show_payment)
 	add_button(buttons, ID_BUTTON_SHOW_REWARDED_AD, show_rewarded_ad)
 	add_button(buttons, ID_BUTTON_SHOW_INVITE, show_invite)
+	add_button(buttons, ID_BUTTON_GET_PAGE_SIZE, get_page_size)
+	add_button(buttons, ID_BUTTON_SET_PAGE_SIZE, set_page_size)
 
 	return buttons
 end
@@ -132,11 +164,11 @@ local function init_view(self)
 
 	view.control_panel = gui.get_node(ID_CONTROL_PANEL)
 	--gui.set_enabled(view.control_panel, false)
+	view.text_log = gui.get_node(ID_TEXT_LOG)
 
 	view.buttons = bind_buttons()
 	self.view = view
 end
-
 
 function init(self)
     msg.post(".", "acquire_input_focus")

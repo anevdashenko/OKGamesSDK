@@ -14,7 +14,28 @@ function OKGames:setup_mock(mock)
 end
 
 ---@return nil@ initialize ok games sdk, must be called before accessing other sdk api
----@param callback function @ called when initialization complete with table result as param
+---@param callback function @ called when initialization complete with table result as param = {
+--- status : boolean,
+--- request_parameters : table with request parameters {
+--- session_key = "some_session_key",
+--  user_gender = "1",
+--  new_sig = "1",
+--  logged_user_id = "345234234",
+--  web_server = "https://ok.ru",
+--  container = "true",
+--  apiconnection = "asdf23234",
+--  first_start = "0",
+--  auth_sig = "asdfas23423",
+--  session_secret_key = "asdfadsf23234",
+--  ip_geo_location = "BY,02,Gomel",
+--  user_image = "url_to_user_image",
+--  user_name = "Ibragim semen",
+--  authorized = "1",
+--  application_key = "GDAFA345",
+--  api_server = "https://api.ok.ru/",
+--  sig = "asdf234",
+--  clientLog = "0"
+--}
 function OKGames:init(callback)
 end
 
@@ -24,6 +45,10 @@ end
 
 ---@return table@ initialize ok games sdk, must be called before accessing other sdk api, return table with result of initialization
 function OKGames:init_async()
+end
+
+---@return table@ table with request parameters
+function OKGames:get_request_parameters()
 end
 
 ---@return nil@recieve current player info {name, photo_url}
@@ -107,4 +132,24 @@ function OKGames:show_invite(show_params, callback)
 end
 
 function OKGames:show_invite_async(show_params)
+end
+
+--- @param window_size table @ params for window size = {width : number, height : number}
+function OKGames:set_window_size(window_size)
+end
+
+--- @param callback function @with results as  { status : boolean, data = {
+--- ‘clientWidth’:1000,
+--- ’clientHeight’:934,
+--- ’scrollLeft’:0,
+--- ’scrollTop’:0,
+--- ’offsetLeft’:0,
+--- ’offsetTop’:76,
+--- ’innerHeight’:949,
+--- ’innerWidth’:863
+--- }
+function OKGames:get_page_info(callback)
+end
+
+function OKGames:get_page_info_async()
 end

@@ -49,12 +49,8 @@ var OKGames = {
 
     OKGames_init : function(callbackID){
         console.log("OKGames_init");
-        okgamesSDK.init((status)=>{
+        okgamesSDK.init((result)=>{
             console.log("complete init");
-
-            result = {
-                status : status
-            };
 
             OKGames.sendObjectCallbackID(callbackID, result);
         });

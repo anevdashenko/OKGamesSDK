@@ -8,7 +8,7 @@
 local Mock = {}
 
 --- @class MockOKGameSDKResult
---- @field success boolean
+--- @field status boolean
 --- @field result string
 --- @field data data
 local MockResultInit = {
