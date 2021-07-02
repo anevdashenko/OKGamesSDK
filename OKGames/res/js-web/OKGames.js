@@ -359,10 +359,10 @@
         },
 
         setWindowSize : function(width, height){
-            if ((width >= MIN_WINDOW_WIDTH) && (width <= MAX_WINDOW_WIDTH) && 
-                (height >= MIN_WINDOW_HEIGHT) && (height <= MAX_WINDOW_HEIGHT)) {
+            try{
                 FAPI.UI.setWindowSize(width, height);
-            } else {
+            }
+            catch(e){
                 console.log("OKSDK: setWindowSize invalid size", width, height)
             }
         },
